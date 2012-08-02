@@ -59,3 +59,32 @@ def have_quorum?()
     state = JSON.parse(mon_status)['state']
     return QUORUM_STATES.include?(state)
 end
+
+def get_client_key(pool, service)
+  #TODO cluster name
+  cluster = 'ceph'
+  hostname = 'hostname' #TODO how to find this out for real?
+  key_path = 'var/lib/ceph/bootstrap-client/#{cluster}.client.#{hostname}.#{service}.keyring'
+
+  ruby_block "create new client key" do
+    client_key = %x[ceph --cluster #{cluster} --name client.bootstrap_client --keyring /var/lib/ceph/bootstrap-client/#{cluster}.keyring auth get-or-create-key client.#{hostname}.#{service} osd 'allow pool #{pool} rwx;' mon 'allow rw']
+    
+    file '#{key_path}.raw' do
+      owner "root"
+      group "root"
+      mode "0440"
+    end
+
+    execute "format as keyring" do
+      command <<-EOH
+        set -e
+        # TODO don't put the key in "ps" output, stdout
+        read KEY <'#{key_path}.raw'
+        ceph-authtool #{key_path} --create-keyring --name=client.#{hostname}.#{service} --add-key="$KEY"
+        rm -f '/var/lib/ceph/bootstrap-client/#{cluster}.keyring.raw'
+      EOH
+    end
+  end
+    
+  return ['client.#{hostname}.#{service}', key_path]
+end
