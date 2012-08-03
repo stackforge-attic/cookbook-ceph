@@ -42,7 +42,7 @@ end
 
 ruby_block "tell ceph-mon about its peers" do
   block do
-    mon_addresses = get_mon_addresses()
+    mon_addresses = Chef::Recipe::Ceph.get_mon_addresses()
     mon_addresses.each do |addr|
       system 'ceph', \
         '--admin-daemon', "/var/run/ceph/ceph-mon.#{node['hostname']}.asok", \
@@ -55,7 +55,7 @@ end
 ruby_block "create client.admin keyring" do
   block do
     if not ::File.exists?('/etc/ceph/ceph.client.admin.keyring') then
-      if not have_quorum? then
+      if not Chef::Recipe::Ceph.have_quorum? then
         puts 'ceph-mon is not in quorum, skipping bootstrap-osd key generation for this run'
       else
         # TODO --set-uid=0
@@ -85,7 +85,7 @@ ruby_block "save bootstrap keys in node attributes" do
   block do
     if node['ceph_bootstrap_osd_key'].nil? then
       raise "missing bootstrap_osd key but do have bootstrap_client key!" unless node['ceph_bootstrap_client_key'].nil?
-      if not have_quorum? then
+      if not Chef::Recipe::Ceph.have_quorum? then
         puts 'ceph-mon is not in quorum, skipping bootstrap key generation for this run'
       else
         osd_key = %x[

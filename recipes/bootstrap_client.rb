@@ -3,7 +3,7 @@
 include_recipe "ceph::default"
 include_recipe "ceph::conf"
 
-mons = get_mon_nodes("ceph_bootstrap_client_key:*")
+mons = Chef::Recipe::Ceph.get_mon_nodes("ceph_bootstrap_client_key:*")
 
 if mons.empty? then
   puts "No ceph-mon having ceph_bootstrap_client_key found."

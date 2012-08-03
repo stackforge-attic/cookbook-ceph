@@ -1,50 +1,51 @@
 def is_crowbar?()
   return defined?(Chef::Recipe::Barclamp) != nil
 end
-
-def get_mon_nodes(extra_search=nil)
-  if is_crowbar?
-    mon_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-mon\]')
-    if not mon_roles.empty?
-      search_string = mon_roles.map { |role_object| "role:"+role_object.name }.join(' OR ')
-      search_string = "(#{search_string}) AND ceph_config_environment:#{node['ceph']['config']['environment']}"
+  
+module CephLibrary
+  def get_mon_nodes(extra_search=nil)
+    if is_crowbar?
+      mon_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-mon\]')
+      if not mon_roles.empty?
+        search_string = mon_roles.map { |role_object| "role:"+role_object.name }.join(' OR ')
+        search_string = "(#{search_string}) AND ceph_config_environment:#{node['ceph']['config']['environment']}"
+      end
+    else
+      search_string = "role:ceph-mon AND chef_environment:#{node.chef_environment}"
     end
-  else
-    search_string = "role:ceph-mon AND chef_environment:#{node.chef_environment}"
+
+    if not extra_search.nil?
+      search_string = "(#{search_string}) AND (#{extra_search})"
+    end
+    mons = search(:node, search_string)
+    return mons
   end
 
-  if not extra_search.nil?
-    search_string = "(#{search_string}) AND (#{extra_search})"
-  end
-  mons = search(:node, search_string)
-  return mons
-end
+  def get_mon_addresses()
+    mons = []
 
-def get_mon_addresses()
-  mons = []
+    # make sure if this node runs ceph-mon, it's always included even if
+    # search is laggy; put it first in the hopes that clients will talk
+    # primarily to local node
+    if node['roles'].include? 'ceph-mon'
+      mons << node
+    end
+    
+    mons += get_mon_nodes()
 
-  # make sure if this node runs ceph-mon, it's always included even if
-  # search is laggy; put it first in the hopes that clients will talk
-  # primarily to local node
-  if node['roles'].include? 'ceph-mon'
-    mons << node
-  end
+    if is_crowbar?
+      mon_addresses = mons.map { |node| Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address }
+    else
+      mon_addresses = mons.map { |node| node["ipaddress"] }
+    end
 
-  mons += get_mon_nodes()
-
-  if is_crowbar?
-    mon_addresses = mons.map { |node| Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address }
-  else
-    mon_addresses = mons.map { |node| node["ipaddress"] }
+    mon_addresses = mon_addresses.map { |ip| ip + ":6789" }
+    return mon_addresses.uniq
   end
 
-  mon_addresses = mon_addresses.map { |ip| ip + ":6789" }
-  return mon_addresses.uniq
-end
-
-QUORUM_STATES = ['leader', 'peon']
-
-def have_quorum?()
+  QUORUM_STATES = ['leader', 'peon']
+  
+  def have_quorum?()
     # "ceph auth get-or-create-key" would hang if the monitor wasn't
     # in quorum yet, which is highly likely on the first run. This
     # helper lets us delay the key generation into the next
@@ -58,33 +59,35 @@ def have_quorum?()
     raise 'getting monitor state failed' unless $?.exitstatus == 0
     state = JSON.parse(mon_status)['state']
     return QUORUM_STATES.include?(state)
-end
-
-def get_client_key(pool, service)
-  #TODO cluster name
-  cluster = 'ceph'
-  hostname = 'hostname' #TODO how to find this out for real?
-  key_path = 'var/lib/ceph/bootstrap-client/#{cluster}.client.#{hostname}.#{service}.keyring'
-
-  ruby_block "create new client key" do
-    client_key = %x[ceph --cluster #{cluster} --name client.bootstrap_client --keyring /var/lib/ceph/bootstrap-client/#{cluster}.keyring auth get-or-create-key client.#{hostname}.#{service} osd 'allow pool #{pool} rwx;' mon 'allow rw']
-    
-    file '#{key_path}.raw' do
-      owner "root"
-      group "root"
-      mode "0440"
-    end
-
-    execute "format as keyring" do
-      command <<-EOH
-        set -e
-        # TODO don't put the key in "ps" output, stdout
-        read KEY <'#{key_path}.raw'
-        ceph-authtool #{key_path} --create-keyring --name=client.#{hostname}.#{service} --add-key="$KEY"
-        rm -f '/var/lib/ceph/bootstrap-client/#{cluster}.keyring.raw'
-      EOH
-    end
   end
+
+  def get_client_key(pool, service)
+    #TODO cluster name
+    cluster = 'ceph'
+    hostname = 'hostname' #TODO how to find this out for real?
+    key_path = 'var/lib/ceph/bootstrap-client/#{cluster}.client.#{hostname}.#{service}.keyring'
     
-  return ['client.#{hostname}.#{service}', key_path]
-end
+    ruby_block "create new client key" do
+      client_key = %x[ceph --cluster #{cluster} --name client.bootstrap_client --keyring /var/lib/ceph/bootstrap-client/#{cluster}.keyring auth get-or-create-key client.#{hostname}.#{service} osd 'allow pool #{pool} rwx;' mon 'allow rw']
+      
+      file '#{key_path}.raw' do
+        owner "root"
+        group "root"
+        mode "0440"
+      end
+      
+      execute "format as keyring" do
+        command <<-EOH
+          set -e
+          # TODO don't put the key in "ps" output, stdout
+          read KEY <'#{key_path}.raw'
+          ceph-authtool #{key_path} --create-keyring --name=client.#{hostname}.#{service} --add-key="$KEY"
+          rm -f '/var/lib/ceph/bootstrap-client/#{cluster}.keyring.raw'
+        EOH
+      end
+    end
+    
+    return ['client.#{hostname}.#{service}', key_path]
+  end
+
+end #module CephLibrary

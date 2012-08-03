@@ -29,3 +29,7 @@ packages.each do |pkg|
 		action :upgrade
 	end
 end
+
+class Chef::Recipe
+  include CephLibrary
+end
