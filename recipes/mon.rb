@@ -5,6 +5,10 @@ require 'json'
 include_recipe "ceph::default"
 include_recipe "ceph::conf"
 
+class Chef::Recipe
+  include CephLibrary
+end
+
 if is_crowbar?
   ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 else
@@ -42,7 +46,7 @@ end
 
 ruby_block "tell ceph-mon about its peers" do
   block do
-    mon_addresses = Chef::Recipe::CephLibrary.get_mon_addresses()
+    mon_addresses = CephLibrary::get_mon_addresses()
     mon_addresses.each do |addr|
       system 'ceph', \
         '--admin-daemon', "/var/run/ceph/ceph-mon.#{node['hostname']}.asok", \
