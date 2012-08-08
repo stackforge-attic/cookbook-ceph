@@ -42,7 +42,7 @@ end
 
 ruby_block "tell ceph-mon about its peers" do
   block do
-    mon_addresses = Chef::Recipe::Ceph.get_mon_addresses()
+    mon_addresses = Chef::Recipe::CephLibrary.get_mon_addresses()
     mon_addresses.each do |addr|
       system 'ceph', \
         '--admin-daemon', "/var/run/ceph/ceph-mon.#{node['hostname']}.asok", \

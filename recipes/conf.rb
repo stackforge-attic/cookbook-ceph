@@ -1,7 +1,7 @@
 raise "fsid must be set in config" if node["ceph"]["config"]['fsid'].nil?
 raise "mon_initial_members must be set in config" if node["ceph"]["config"]['mon_initial_members'].nil?
 
-mon_addresses = Chef::Recipe::Ceph.get_mon_addresses()
+mon_addresses = Chef::Recipe::CephLibrary.get_mon_addresses()
 
 template '/etc/ceph/ceph.conf' do
   source 'ceph.conf.erb'
