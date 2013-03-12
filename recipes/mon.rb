@@ -31,6 +31,7 @@ KR='/var/lib/ceph/tmp/#{cluster}-#{node['hostname']}.mon.keyring'
 # TODO don't put the key in "ps" output, stdout
 ceph-authtool "$KR" --create-keyring --name=mon. --add-key='#{node["ceph"]["monitor-secret"]}' --cap mon 'allow *'
 
+mkdir -p /var/lib/ceph/mon/ceph-#{node['hostname']}
 ceph-mon --mkfs -i #{node['hostname']} --keyring "$KR"
 rm -f -- "$KR"
 touch /var/lib/ceph/mon/ceph-#{node['hostname']}/done
