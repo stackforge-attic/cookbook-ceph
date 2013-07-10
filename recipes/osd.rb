@@ -72,6 +72,19 @@ else
           if node["crowbar"]["disks"][disk]["usage"] == "Storage" and not already_prepared
             Chef::Log.debug("Disk: #{disk} should be used for ceph")
 
+            #When executing the barclamp on a raw disk ceph-disk-prepare fails
+            #We first need to create the GUID Partition Table
+            #Then create an initial partition and verify it works
+            unless ::Kernel.system("grep -q \'#{disk}1$\' /proc/partitions")
+              Chef::Log.info("Preparing #{disk} with GPT.")
+              ::Kernel.system("sgdisk /dev/#{disk}")
+              Chef::Log.info("Creating initial partition on #{disk} as needed.")
+              ::Kernel.system("parted -s /dev/#{disk} -- unit s mklabel gpt mkpart ext2 2048s -1M")
+              ::Kernel.system("partprobe /dev/#{disk}")
+              sleep 3
+              ::Kernel.system("dd if=/dev/zero of=/dev/#{disk}1 bs=1024 count=65")
+            end
+
             system 'ceph-disk-prepare', \
               "/dev/#{disk}"
             raise 'ceph-disk-prepare failed' unless $?.exitstatus == 0
