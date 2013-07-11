@@ -37,6 +37,7 @@ ceph-authtool "$KR" --create-keyring --name=mon. --add-key='#{node["ceph"]["moni
 ceph-mon --mkfs -i #{node['hostname']} --keyring "$KR"
 rm -f -- "$KR"
 touch /var/lib/ceph/mon/ceph-#{node['hostname']}/done
+touch /var/lib/ceph/mon/ceph-#{node['hostname']}/upstart
 EOH
   # TODO built-in done-ness flag for ceph-mon?
   creates '/var/lib/ceph/mon/ceph-#{node["hostname"]}/done'
@@ -102,16 +103,7 @@ ruby_block "save bootstrap keys in node attributes" do
       if not have_quorum? then
         Chef::Log.info('ceph-mon is not in quorum, skipping bootstrap key generation for this run')
       else
-        osd_key = %x[
-          ceph \
-            --name mon. \
-            --keyring '/var/lib/ceph/mon/#{cluster}-#{node['hostname']}/keyring' \
-            auth get-or-create-key client.bootstrap-osd mon \
-            "allow command osd create ...; \
-            allow command osd crush set ...; \
-            allow command auth add * osd allow\\ * mon allow\\ rwx; \
-            allow command mon getmap"
-        ]
+        osd_key = %x[ceph --name mon. --keyring '/var/lib/ceph/mon/#{cluster}-#{node['hostname']}/keyring' auth get-or-create-key client.bootstrap-osd mon "allow command osd create ...; allow command osd crush set ...; allow command auth add * osd allow\\ * mon allow\\ rwx; allow command mon getmap"]
         raise 'adding or getting bootstrap-osd key failed' unless $?.exitstatus == 0
         node.override['ceph_bootstrap_osd_key'] = osd_key
 
