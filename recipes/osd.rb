@@ -35,8 +35,19 @@ if not have_mons then
 else
 
   while mons.empty?
-    sleep(1)
-    mons = get_mon_nodes(node['ceph']['config']['environment'], "ceph_bootstrap_osd_key:*")
+    if not have_quorum? then
+      Chef::Log.info("Waiting for monitors to go into quorum.")
+      sleep(1)
+      mons = get_mon_nodes(node['ceph']['config']['environment'], "ceph_bootstrap_osd_key:*")
+      if mons[0]["ceph_bootstrap_osd_key"] then
+        ceph_bootstrap_osd_key = mons[0]["ceph_bootstrap_osd_key"]
+      end
+    else
+      Chef::Log.info("We are in quorum, getting ceph_bootstrap_osd_key from ceph.")
+      ceph_bootstrap_osd_key = %x[ceph auth get-or-create-key client.bootstrap-osd mon "allow command osd create ...; allow command osd crush set ...; allow command auth add * osd allow\\ * mon allow\\ rwx; allow command mon getmap"]
+      raise 'adding or getting bootstrap-osd key failed' unless $?.exitstatus == 0
+      mons = Hash["bypass" => 1]
+    end
   end # while mons.empty?
 
   directory "/var/lib/ceph/bootstrap-osd" do
