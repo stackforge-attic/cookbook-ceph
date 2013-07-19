@@ -63,7 +63,7 @@ else
     command <<-EOH
       set -e
       # TODO don't put the key in "ps" output, stdout
-      ceph-authtool '/var/lib/ceph/bootstrap-osd/#{cluster}.keyring' --create-keyring --name=client.bootstrap-osd --add-key='#{mons[0]["ceph_bootstrap_osd_key"]}'
+      ceph-authtool '/var/lib/ceph/bootstrap-osd/#{cluster}.keyring' --create-keyring --name=client.bootstrap-osd --add-key='#{ceph_bootstrap_osd_key}'
       rm -f '/var/lib/ceph/bootstrap-osd/#{cluster}.keyring.raw'
     EOH
     creates "/var/lib/ceph/bootstrap-osd/#{cluster}.keyring"
