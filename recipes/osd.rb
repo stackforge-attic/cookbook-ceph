@@ -62,42 +62,31 @@ else
     ruby_block "select new disks for ceph osd" do
       block do
         do_trigger = false
-        node["crowbar"]["disks"].each do |disk, data|
-
-          already_prepared = false
-          if not node["crowbar_wall"].nil? and not node["crowbar_wall"]["ceph"].nil? and not node["crowbar_wall"]["ceph"][disk].nil? and not node["crowbar_wall"]["ceph"][disk]["prepared"].nil?
-            already_prepared = true unless node["crowbar_wall"]["ceph"][disk]["prepared"] == false
-          end
-
-          if node["crowbar"]["disks"][disk]["usage"] == "Storage" and not already_prepared
-            Chef::Log.debug("Disk: #{disk} should be used for ceph")
-
-            #When executing the barclamp on a raw disk ceph-disk-prepare fails
-            #We first need to create the GUID Partition Table
-            #Then create an initial partition and verify it works
-            unless ::Kernel.system("grep -q \'#{disk}1$\' /proc/partitions")
-              Chef::Log.info("Preparing #{disk} with GPT.")
-              ::Kernel.system("sgdisk /dev/#{disk}")
-              Chef::Log.info("Creating initial partition on #{disk} as needed.")
-              ::Kernel.system("parted -s /dev/#{disk} -- unit s mklabel gpt mkpart ext2 2048s -1M")
-              ::Kernel.system("partprobe /dev/#{disk}")
-              sleep 3
-              ::Kernel.system("dd if=/dev/zero of=/dev/#{disk}1 bs=1024 count=65")
-            end
-
-            system 'ceph-disk-prepare', \
-              "/dev/#{disk}"
-            raise 'ceph-disk-prepare failed' unless $?.exitstatus == 0
-
-            do_trigger = true
-
-            node["crowbar_wall"]["ceph"] = {} unless node["crowbar_wall"]["ceph"]
-            node["crowbar_wall"]["ceph"][disk] = {} unless node["crowbar_wall"]["ceph"][disk]
-            node["crowbar_wall"]["ceph"][disk]["prepared"] = true
-            node.save
+        BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).each do |disk|
+          if disk.claim("Ceph")
+            Chef::Log.info("Claiming #{disk.name} for Ceph")
+          else
+            Chef::Log.info("Failed to claim #{disk.name} for Ceph")
           end
         end
 
+        disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph").map do |d|
+          d.device
+        end.sort
+
+        disks.sort.each { |disk|
+          unless ::Kernel.system("grep -q \'#{disk}1$\' /proc/partitions")
+            Chef::Log.info("Using unclaimed disk: #{disk}")
+            #Make sure the disk is clean and using a GUID partition table
+            ::Kernel.system("sgdisk -Z /dev/#{disk}")
+            #TODO: allow for separate journal
+            system 'ceph-disk-prepare', \
+              "/dev/#{disk}"
+            raise 'ceph-disk-prepare failed' unless $?.exitstatus == 0
+          else
+            Chef::Log.info("This disk may already be in use by Ceph. Remove the partitions if you wish to re-import it into your cluster.")
+          end
+        }
         if do_trigger
           system 'udevadm', \
             "trigger", \
@@ -105,7 +94,6 @@ else
             "--action=add"
           raise 'udevadm trigger failed' unless $?.exitstatus == 0
         end
-
       end
     end
   end
