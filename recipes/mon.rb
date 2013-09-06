@@ -25,6 +25,7 @@ cluster = 'ceph'
 execute 'ceph-mon mkfs' do
   command <<-EOH
 set -e
+mkdir -p /var/lib/ceph/mon/ceph-#{node['hostname']}/
 # TODO chef creates doesn't seem to suppressing re-runs, do it manually
 if [ -e '/var/lib/ceph/mon/ceph-#{node["hostname"]}/done' ]; then
   echo 'ceph-mon mkfs already done, skipping'
