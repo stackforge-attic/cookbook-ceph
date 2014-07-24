@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'ipaddr'
 require 'json'
 
@@ -5,7 +7,7 @@ def crowbar?
   !defined?(Chef::Recipe::Barclamp).nil?
 end
 
-def get_mon_nodes(extra_search = nil)
+def get_mon_nodes(extra_search = nil) # rubocop:disable MethodLength
   if crowbar?
     mon_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-mon\]')
     unless mon_roles.empty?
@@ -28,7 +30,7 @@ end
 # 1. We look if the network is IPv6 or IPv4
 # 2. We look for a route matching the network
 # 3. We grab the IP and return it with the port
-def find_node_ip_in_network(network, nodeish = nil)
+def find_node_ip_in_network(network, nodeish = nil) # rubocop:disable MethodLength
   nodeish = node unless nodeish
   net = IPAddr.new(network)
   nodeish['network']['interfaces'].each do |iface, addrs|
@@ -43,7 +45,7 @@ def find_node_ip_in_network(network, nodeish = nil)
   nil
 end
 
-def mon_addresses
+def mon_addresses # rubocop:disable MethodLength
   mon_ips = []
 
   if File.exist?("/var/run/ceph/ceph-mon.#{node['hostname']}.asok")

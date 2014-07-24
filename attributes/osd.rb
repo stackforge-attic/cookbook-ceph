@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 case node['platform']
 when 'ubuntu'
   default['ceph']['osd']['init_style'] = 'upstart'

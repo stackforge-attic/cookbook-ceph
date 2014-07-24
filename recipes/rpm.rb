@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 platform_family = node['platform_family']
 
 case platform_family

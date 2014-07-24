@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #
 # Cookbook Name:: ceph
 # Attributes:: radosgw

@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #
 # Author:: Kyle Bader <kyle.bader@dreamhost.com>
 # Cookbook Name:: ceph
@@ -94,6 +95,6 @@ template '/var/www/s3gw.fcgi' do
   group 'root'
   mode '0755'
   variables(
-    :ceph_rgw_client => "client.radosgw.#{node['hostname']}"
+    ceph_rgw_client: "client.radosgw.#{node['hostname']}"
   )
 end
