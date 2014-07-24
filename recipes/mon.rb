@@ -1,3 +1,5 @@
+# encoding: UTF-8
+#
 # This recipe creates a monitor cluster
 #
 # You should never change the mon default path or
@@ -29,7 +31,7 @@ directory '/var/run/ceph' do
   action :create
 end
 
-directory "/var/lib/ceph/mon/ceph-#{node["hostname"]}" do
+directory "/var/lib/ceph/mon/ceph-#{node['hostname']}" do
   owner 'root'
   group 'root'
   mode 00755
@@ -40,7 +42,7 @@ end
 # TODO: cluster name
 cluster = 'ceph'
 
-unless File.exist?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
+unless File.exist?("/var/lib/ceph/mon/ceph-#{node['hostname']}/done")
   keyring = "#{Chef::Config[:file_cache_path]}/#{cluster}-#{node['hostname']}.mon.keyring"
 
   if node['ceph']['encrypted_data_bags']
@@ -62,7 +64,7 @@ unless File.exist?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
   ruby_block 'finalise' do
     block do
       ['done', service_type].each do |ack|
-        ::File.open("/var/lib/ceph/mon/ceph-#{node["hostname"]}/#{ack}", 'w').close
+        ::File.open("/var/lib/ceph/mon/ceph-#{node['hostname']}/#{ack}", 'w').close
       end
     end
   end
@@ -75,7 +77,7 @@ if service_type == 'upstart'
   end
   service 'ceph-mon-all' do
     provider Chef::Provider::Service::Upstart
-    supports :status => true
+    supports status: true
     action [:enable, :start]
   end
 end
@@ -88,7 +90,7 @@ service 'ceph_mon' do
   else
     service_name 'ceph'
   end
-  supports :restart => true, :status => true
+  supports restart: true, status: true
   action [:enable, :start]
 end
 

@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #
 # Author:: Kyle Bader <kyle.bader@dreamhost.com>
 # Cookbook Name:: ceph
@@ -46,6 +47,6 @@ service 'tgt' do
   else
     service_name 'tgt'
   end
-  supports :restart => true
+  supports restart: true
   action [:enable, :start]
 end

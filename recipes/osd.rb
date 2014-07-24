@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #
 # Author:: Kyle Bader <kyle.bader@dreamhost.com>
 # Cookbook Name:: ceph
@@ -70,7 +71,7 @@ execute 'format as keyring' do
 end
 
 if crowbar?
-  node['crowbar']['disks'].each do |disk, data|
+  node['crowbar']['disks'].each do |disk, _data|
     execute "ceph-disk-prepare #{disk}" do
       command "ceph-disk-prepare /dev/#{disk}"
       only_if { node['crowbar']['disks'][disk]['usage'] == 'Storage' }
@@ -102,7 +103,7 @@ else
   if !node['ceph']['osd_devices'].nil?
     devices = node['ceph']['osd_devices']
 
-    devices = Hash[(0...devices.size).zip devices] unless devices.kind_of? Hash
+    devices = Hash[(0...devices.size).zip devices] unless devices.is_a? Hash
 
     devices.each do |index, osd_device|
       unless osd_device['status'].nil?
@@ -150,7 +151,7 @@ else
         service_name 'ceph'
       end
       action [:enable, :start]
-      supports :restart => true
+      supports restart: true
     end
   else
     Log.info('node["ceph"]["osd_devices"] empty')

@@ -1,28 +1,24 @@
 AllCops:
   Includes:
-    - Berksfile
+    - metadata.rb
     - Gemfile
-    - Rakefile
-    - Thorfile
-    - Guardfile
-  Excludes:
-    - vendor/**
+    - attributes/**
+    - libraries/**
+    - providers/**
+    - recipes/**
+    - resources/**
+    - spec/**
 
-ClassLength:
-  Enabled: false
-Documentation:
-  Enabled: false
 Encoding:
+  Exclude:
+    - metadata.rb
+    - Gemfile
+
+NumericLiterals:
   Enabled: false
-HashSyntax:
-  Enabled: false
+
 LineLength:
-  Enabled: false
-MethodLength:
-  Enabled: false
-SignalException:
-  Enabled: false
-TrailingComma:
-  Enabled: false
+  Enabled: False
+
 WordArray:
-  Enabled: false
+  MinSize: 3

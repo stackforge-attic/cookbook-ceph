@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 case node['platform_family']
 when 'debian'
   include_recipe 'ceph::apt'

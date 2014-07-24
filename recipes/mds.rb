@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #
 # Author:: Kyle Bader <kyle.bader@dreamhost.com>
 # Cookbook Name:: ceph
@@ -22,7 +23,7 @@ include_recipe 'ceph::conf'
 
 cluster = 'ceph'
 
-directory "/var/lib/ceph/mds/#{cluster}-#{node["hostname"]}" do
+directory "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}" do
   owner 'root'
   group 'root'
   mode 00755
@@ -32,7 +33,7 @@ end
 
 ruby_block 'create mds client key' do
   block do
-    cmd = "ceph auth get-or-create mds.#{node['hostname']} osd 'allow *' mon 'allow rwx' --name mon. --key='#{node["ceph"]["monitor-secret"]}'"
+    cmd = "ceph auth get-or-create mds.#{node['hostname']} osd 'allow *' mon 'allow rwx' --name mon. --key='#{node['ceph']['monitor-secret']}'"
     keyring = Mixlib::ShellOut.new(cmd).run_command.stdout
 
     keyfile = File.new("/var/lib/ceph/mds/#{cluster}-#{node['hostname']}/keyring", 'w')
@@ -41,7 +42,7 @@ ruby_block 'create mds client key' do
   end
 end
 
-file "/var/lib/ceph/mds/#{cluster}-#{node["hostname"]}/done" do
+file "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}/done" do
   owner 'root'
   group 'root'
   mode 00644
@@ -55,7 +56,7 @@ when 'upstart'
 else
   filename = 'sysvinit'
 end
-file "/var/lib/ceph/mds/#{cluster}-#{node["hostname"]}/#{filename}" do
+file "/var/lib/ceph/mds/#{cluster}-#{node['hostname']}/#{filename}" do
   owner 'root'
   group 'root'
   mode 00644
@@ -70,5 +71,5 @@ service 'ceph_mds' do
     service_name 'ceph'
   end
   action [:enable, :start]
-  supports :restart => true
+  supports restart: true
 end
