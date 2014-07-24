@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #
 # Author:: Kyle Bader <kyle.bader@dreamhost.com>
 # Cookbook Name:: ceph
@@ -45,9 +46,9 @@ end
 
 include_recipe 'ceph::conf'
 
-if !::File.exists?("/var/lib/ceph/radosgw/ceph-radosgw.#{node['hostname']}/done")
+if !::File.exist?("/var/lib/ceph/radosgw/ceph-radosgw.#{node['hostname']}/done")
   if node['ceph']['radosgw']['webserver_companion']
-    include_recipe "ceph::radosgw_#{node["ceph"]["radosgw"]["webserver_companion"]}"
+    include_recipe "ceph::radosgw_#{node['ceph']['radosgw']['webserver_companion']}"
   end
 
   ceph_client 'radosgw' do
@@ -70,7 +71,7 @@ if !::File.exists?("/var/lib/ceph/radosgw/ceph-radosgw.#{node['hostname']}/done"
         service_name 'ceph-radosgw'
       end
     end
-    supports :restart => true
+    supports restart: true
     action [:enable, :start]
   end
 else

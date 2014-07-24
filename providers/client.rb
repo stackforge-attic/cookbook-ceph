@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 use_inline_resources
 
 def whyrun_supported?
@@ -28,7 +30,7 @@ def load_current_resource
   @current_resource.as_keyring(@new_resource.as_keyring)
   @current_resource.keyname(@new_resource.keyname || "client.#{current_resource.name}.#{node['hostname']}")
   @current_resource.caps(get_caps(@current_resource.keyname))
-  default_filename = "/etc/ceph/ceph.client.#{@new_resource.name}.#{node['hostname']}.#{@new_resource.as_keyring ? "keyring" : "secret"}"
+  default_filename = "/etc/ceph/ceph.client.#{@new_resource.name}.#{node['hostname']}.#{@new_resource.as_keyring ? 'keyring' : 'secret'}"
   @current_resource.filename(@new_resource.filename || default_filename)
   @current_resource.key(get_new_key(@current_resource.keyname))
   @current_resource.caps_match = true if @current_resource.caps == @new_resource.caps
@@ -51,7 +53,7 @@ def get_caps(keyname)
   caps
 end
 
-def auth_set_key(keyname, caps)
+def auth_set_key(keyname, caps) # rubocop:disable MethodLength
   # find the monitor secret
   mon_secret = ''
   mons = get_mon_nodes
