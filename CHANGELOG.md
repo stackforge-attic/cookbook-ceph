@@ -4,6 +4,7 @@ ceph
 v0.2.2 (2014-08-15)
 -------------------
 * Upgrading to Juno
+- Upgrading berkshelf from 2.0.18 to 3.1.5
 
 v0.2.0 (2014-03-03)
 -------------------

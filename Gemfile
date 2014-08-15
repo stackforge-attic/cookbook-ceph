@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'chef', '~> 11.12'
-gem 'berkshelf', '~> 2.0.18'
+gem 'berkshelf', '~> 3.1.5'
 gem 'chefspec', '~> 4.0'
 gem 'rspec', '~> 3.0'
 gem 'foodcritic', '~> 3.0.3'
