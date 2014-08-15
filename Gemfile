@@ -1,12 +1,12 @@
 source 'https://rubygems.org'
 
-gem 'chef', '~> 11.8'
+gem 'chef', '~> 11.12'
 gem 'berkshelf', '~> 2.0.18'
-gem 'chefspec', '~> 3.4.0'
-gem 'rspec', '~> 2.14.1'
+gem 'chefspec', '~> 4.0'
+gem 'rspec', '~> 3.0'
 gem 'foodcritic', '~> 3.0.3'
-gem 'strainer'
 gem 'rubocop', '~> 0.18.1'
+gem 'fauxhai', '>= 2.1.0'
 
 group :integration do
   gem 'test-kitchen', '~> 1.1.1'

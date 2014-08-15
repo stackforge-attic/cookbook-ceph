@@ -5,4 +5,5 @@
 .vagrant/
 .coverage/
 Berksfile.lock
+Gemfile.lock
 Vagrantfile
