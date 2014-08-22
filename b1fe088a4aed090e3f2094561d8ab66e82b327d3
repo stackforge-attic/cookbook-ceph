@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Justin Shepherd <jshepher@rackspace.com>
+Code-Review+1: Jan Klare <j.klare@x-ion.de>
+Workflow+1: JJ Asghar <jj@getchef.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 22 Aug 2014 18:26:01 +0000
+Reviewed-on: https://review.openstack.org/114575
+Project: stackforge/cookbook-ceph
+Branch: refs/heads/master
