@@ -44,6 +44,8 @@ https://github.com/opscode/cookbooks
 
 * apt
 * apache2
+* yum
+* yum-epel
 
 
 ATTRIBUTES
